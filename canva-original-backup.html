@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="es" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Countdown Despedida</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=Outfit:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    .font-heading {
+      font-family: 'Outfit', sans-serif;
+    }
+    
+    .font-body {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(5deg); }
+    }
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(251, 146, 60, 0.3); }
+      50% { box-shadow: 0 0 40px rgba(251, 146, 60, 0.6); }
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    
+    @keyframes confetti-fall {
+      0% { transform: translateY(-100%) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+    
+    @keyframes floating-message {
+      0% { 
+        opacity: 0;
+        transform: translateY(20px) scale(0.8);
+      }
+      10% { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      90% { 
+        opacity: 1;
+        transform: translateY(-150px) scale(1);
+      }
+      100% { 
+        opacity: 0;
+        transform: translateY(-200px) scale(0.8);
+      }
+    }
+    
+    .animate-float {
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    .animate-float-delayed {
+      animation: float 6s ease-in-out infinite 2s;
+    }
+    
+    .animate-pulse-glow {
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+    
+    .shimmer-text {
+      background: linear-gradient(90deg, currentColor 40%, #fbbf24 50%, currentColor 60%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      animation: shimmer 3s linear infinite;
+    }
+    
+    .countdown-card {
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+    
+    .countdown-card:hover {
+      transform: translateY(-5px) scale(1.02);
+    }
+    
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      top: -10px;
+      animation: confetti-fall linear forwards;
+      pointer-events: none;
+      z-index: 50;
+    }
+    
+    .floating-message {
+      position: fixed;
+      z-index: 100;
+      animation: floating-message 4s ease-out forwards;
+      pointer-events: none;
+      font-size: 2rem;
+      font-weight: bold;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full font-body">
+  <div id="app-wrapper" class="w-full h-full overflow-auto relative" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);"><!-- Confetti container -->
+   <div id="confetti-container"></div><!-- Floating decorations -->
+   <div class="absolute top-10 left-10 text-6xl animate-float opacity-60">
+    🎉
+   </div>
+   <div class="absolute top-20 right-16 text-5xl animate-float-delayed opacity-60">
+    🎊
+   </div>
+   <div class="absolute bottom-20 left-20 text-5xl animate-float opacity-60">
+    ✨
+   </div>
+   <div class="absolute bottom-32 right-10 text-6xl animate-float-delayed opacity-60">
+    🎈
+   </div><!-- Main content -->
+   <div class="relative z-10 flex flex-col items-center justify-center min-h-full px-4 py-12"><!-- Header -->
+    <div class="text-center mb-12">
+     <h1 id="main-title" class="font-heading text-5xl md:text-7xl font-extrabold mb-4" style="color: #fb923c;">¡Me voy! 👋</h1>
+     <p id="subtitle" class="text-xl md:text-2xl font-light" style="color: #94a3b8;">Cuenta atrás para mi último día</p>
+    </div><!-- Countdown -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-12 max-w-4xl w-full">
+     <div class="countdown-card rounded-2xl p-6 text-center animate-pulse-glow" style="background: rgba(251, 146, 60, 0.1); border: 1px solid rgba(251, 146, 60, 0.3);">
+      <div id="days" class="font-heading text-5xl md:text-7xl font-bold mb-2" style="color: #fb923c;">
+       --
+      </div>
+      <div class="text-sm md:text-base uppercase tracking-widest font-medium" style="color: #94a3b8;">
+       Días
+      </div>
+     </div>
+     <div class="countdown-card rounded-2xl p-6 text-center" style="background: rgba(251, 146, 60, 0.1); border: 1px solid rgba(251, 146, 60, 0.3);">
+      <div id="hours" class="font-heading text-5xl md:text-7xl font-bold mb-2" style="color: #fb923c;">
+       --
+      </div>
+      <div class="text-sm md:text-base uppercase tracking-widest font-medium" style="color: #94a3b8;">
+       Horas
+      </div>
+     </div>
+     <div class="countdown-card rounded-2xl p-6 text-center" style="background: rgba(251, 146, 60, 0.1); border: 1px solid rgba(251, 146, 60, 0.3);">
+      <div id="minutes" class="font-heading text-5xl md:text-7xl font-bold mb-2" style="color: #fb923c;">
+       --
+      </div>
+      <div class="text-sm md:text-base uppercase tracking-widest font-medium" style="color: #94a3b8;">
+       Minutos
+      </div>
+     </div>
+     <div class="countdown-card rounded-2xl p-6 text-center" style="background: rgba(251, 146, 60, 0.1); border: 1px solid rgba(251, 146, 60, 0.3);">
+      <div id="seconds" class="font-heading text-5xl md:text-7xl font-bold mb-2" style="color: #fb923c;">
+       --
+      </div>
+      <div class="text-sm md:text-base uppercase tracking-widest font-medium" style="color: #94a3b8;">
+       Segundos
+      </div>
+     </div>
+    </div><!-- Progress bar with photo slider -->
+    <div class="w-full max-w-2xl mb-8">
+     <div class="flex justify-between text-sm mb-4" style="color: #94a3b8;"><span>Mi viaje hacia la libertad</span> <span id="progress-percent">0%</span>
+     </div>
+     <div class="relative mb-8"><!-- Bar track -->
+      <div class="relative h-3 rounded-full overflow-hidden" style="background: rgba(251, 146, 60, 0.2); border: 1px solid rgba(251, 146, 60, 0.5);"><!-- Animated progress background -->
+       <div id="progress-bar" class="progress-bar h-full rounded-full" style="width: 0%; background: linear-gradient(90deg, #fb923c, #f59e0b); transition: width 1s ease-out;"></div>
+      </div><!-- Photo slider thumb (positioned absolutely on top) -->
+      <div id="slider-thumb" class="absolute -top-7 w-16 h-16 rounded-full border-4 shadow-lg z-20 overflow-hidden transition-all duration-300 group-hover:scale-110" style="left: 0%; border-color: #fb923c; background: #1e293b; transform: translateX(-50%);"><img id="thumb-photo" src="" alt="Foto de progreso" class="w-full h-full object-cover" style="display: none;">
+       <div id="thumb-placeholder" class="w-full h-full flex items-center justify-center text-3xl" style="background: rgba(251, 146, 60, 0.2);">
+        📸
+       </div>
+      </div>
+     </div><!-- Start and End labels -->
+     <div class="flex justify-between text-xs mb-4" style="color: #64748b;"><span>12 Ene</span> <span>31 Mar ⚰️</span>
+     </div>
+    </div><!-- Target date -->
+    <div class="text-center mb-8 p-6 rounded-2xl" style="background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(148, 163, 184, 0.2);">
+     <p class="text-sm uppercase tracking-widest mb-2" style="color: #64748b;">Fecha de salida</p>
+     <p class="font-heading text-2xl md:text-3xl font-bold" style="color: #f1f5f9;">31 de Marzo de 2025 • 8:00 AM</p>
+    </div><!-- Farewell message -->
+    <div id="farewell-section" class="text-center mb-12">
+     <p id="farewell-message" class="text-xl md:text-2xl font-light italic" style="color: #cbd5e1;">"¡Gracias por todo, compañeros! 💜"</p>
+    </div><!-- Comments Section -->
+    <div class="w-full max-w-2xl mb-8 p-6 rounded-2xl" style="background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(148, 163, 184, 0.2);">
+     <h3 class="font-heading text-2xl font-bold mb-4" style="color: #f1f5f9;">Dejen sus mensajes 💬</h3><!-- Comment input -->
+     <div class="mb-4"><input type="text" id="comment-input" placeholder="Escribe tu mensaje aquí..." class="w-full px-4 py-3 rounded-lg" style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(251, 146, 60, 0.3); color: #f1f5f9;" maxlength="100"> <button id="comment-btn" class="mt-3 w-full px-4 py-2 rounded-lg font-semibold transition-all" style="background: #fb923c; color: #0f172a;">Enviar mensaje</button>
+     </div><!-- Comments list -->
+     <div id="comments-list" class="max-h-80 overflow-y-auto space-y-3">
+      <div class="text-center py-8" style="color: #64748b;">
+       <p>Aún no hay mensajes... ¡Sé el primero! 👆</p>
+      </div>
+     </div>
+    </div><!-- Hidden celebration message -->
+    <div id="celebration" class="hidden text-center">
+     <h2 class="font-heading text-4xl md:text-6xl font-bold mb-4" style="color: #fb923c;">🎉 ¡LIBERTAD! 🎉</h2>
+     <p class="text-xl" style="color: #94a3b8;">¡El momento ha llegado!</p>
+    </div>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      main_title: "¡Me voy! 👋",
+      subtitle: "Cuenta atrás para mi último día",
+      farewell_message: "¡Gracias por todo, compañeros! 💜",
+      photo_url: "",
+      primary_color: "#fb923c",
+      secondary_color: "#1e293b",
+      text_color: "#94a3b8",
+      accent_color: "#f59e0b",
+      background_color: "#0f172a",
+      font_family: "Space Grotesk",
+      font_size: 16
+    };
+    
+    let config = { ...defaultConfig };
+    
+    // Target date: March 31, 2025 at 8:00 AM (local time)
+    const targetDate = new Date('2025-03-31T08:00:00');
+    
+    // Start date for progress calculation: January 12, 2025
+    const startDate = new Date('2025-01-12T00:00:00');
+    
+    function updateCountdown() {
+      const now = new Date();
+      const diff = targetDate - now;
+      
+      if (diff <= 0) {
+        document.getElementById('days').textContent = '0';
+        document.getElementById('hours').textContent = '0';
+        document.getElementById('minutes').textContent = '0';
+        document.getElementById('seconds').textContent = '0';
+        document.getElementById('progress-bar').style.width = '100%';
+        document.getElementById('slider-thumb').style.left = '100%';
+        document.getElementById('progress-percent').textContent = '100%';
+        document.getElementById('farewell-section').classList.add('hidden');
+        document.getElementById('celebration').classList.remove('hidden');
+        createConfettiBurst();
+        return;
+      }
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      document.getElementById('days').textContent = days;
+      document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+      document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+      document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+      
+      // Calculate progress
+      const totalDuration = targetDate - startDate;
+      const elapsed = now - startDate;
+      const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+      
+      document.getElementById('progress-bar').style.width = progress.toFixed(1) + '%';
+      // Position slider thumb on the bar
+      const sliderPos = Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
+      document.getElementById('slider-thumb').style.left = sliderPos + '%';
+      document.getElementById('progress-percent').textContent = progress.toFixed(1) + '%';
+    }
+    
+    function createFloatingMessage() {
+      const messages = [
+        '🎉', '🎊', '✨', '💜', '🚀', '📚', '🌟', '🎯', 
+        '¡Libre!', '¡Yay!', '🔥', '💫', '⚡', '🌈', '💎'
+      ];
+      const message = messages[Math.floor(Math.random() * messages.length)];
+      
+      const floatingMsg = document.createElement('div');
+      floatingMsg.className = 'floating-message';
+      floatingMsg.textContent = message;
+      floatingMsg.style.left = Math.random() * 80 + 10 + '%';
+      floatingMsg.style.bottom = '20px';
+      floatingMsg.style.color = ['#fb923c', '#f59e0b', '#fbbf24', '#34d399', '#60a5fa'][Math.floor(Math.random() * 5)];
+      
+      document.body.appendChild(floatingMsg);
+      
+      setTimeout(() => floatingMsg.remove(), 4000);
+    }
+    
+    function createConfetti() {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.left = Math.random() * 100 + '%';
+      confetti.style.backgroundColor = ['#fb923c', '#f59e0b', '#fbbf24', '#34d399', '#60a5fa'][Math.floor(Math.random() * 5)];
+      confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+      confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+      document.getElementById('confetti-container').appendChild(confetti);
+      
+      setTimeout(() => confetti.remove(), 5000);
+    }
+    
+    function createConfettiBurst() {
+      for (let i = 0; i < 50; i++) {
+        setTimeout(createConfetti, i * 50);
+      }
+    }
+    
+    // Occasional confetti and messages
+    setInterval(() => {
+      if (Math.random() > 0.7) createConfetti();
+    }, 2000);
+    
+    setInterval(() => {
+      if (Math.random() > 0.85) createFloatingMessage();
+    }, 3000);
+    
+    // Comments functionality
+    let comments = JSON.parse(localStorage.getItem('despedida_comments')) || [];
+    
+    function renderComments() {
+      const commentsList = document.getElementById('comments-list');
+      
+      if (comments.length === 0) {
+        commentsList.innerHTML = '<div class="text-center py-8" style="color: #64748b;"><p>Aún no hay mensajes... ¡Sé el primero! 👆</p></div>';
+        return;
+      }
+      
+      commentsList.innerHTML = comments.map((comment, index) => `
+        <div class="p-3 rounded-lg" style="background: rgba(251, 146, 60, 0.1); border-left: 3px solid #fb923c;">
+          <p style="color: #f1f5f9; margin: 0; word-break: break-word;">${comment.text}</p>
+          <p style="color: #64748b; font-size: 0.85rem; margin: 4px 0 0 0;">${comment.name || 'Anónimo'} • ${new Date(comment.date).toLocaleDateString('es-ES')}</p>
+        </div>
+      `).join('');
+    }
+    
+    document.getElementById('comment-btn').addEventListener('click', () => {
+      const input = document.getElementById('comment-input');
+      const text = input.value.trim();
+      
+      if (text.length > 0) {
+        comments.push({
+          text: text,
+          name: 'Compañero',
+          date: new Date().toISOString()
+        });
+        localStorage.setItem('despedida_comments', JSON.stringify(comments));
+        input.value = '';
+        renderComments();
+        
+        // Scroll to bottom
+        document.getElementById('comments-list').scrollTop = document.getElementById('comments-list').scrollHeight;
+      }
+    });
+    
+    document.getElementById('comment-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        document.getElementById('comment-btn').click();
+      }
+    });
+    
+    // Drag and drop for photo
+    const sliderThumb = document.getElementById('slider-thumb');
+    const thumbPhoto = document.getElementById('thumb-photo');
+    const thumbPlaceholder = document.getElementById('thumb-placeholder');
+    
+    sliderThumb.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      sliderThumb.style.opacity = '0.7';
+    });
+    
+    sliderThumb.addEventListener('dragleave', () => {
+      sliderThumb.style.opacity = '1';
+    });
+    
+    sliderThumb.addEventListener('drop', (e) => {
+      e.preventDefault();
+      sliderThumb.style.opacity = '1';
+      
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        const file = files[0];
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            thumbPhoto.src = event.target.result;
+            thumbPhoto.style.display = 'block';
+            thumbPlaceholder.style.display = 'none';
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    });
+    
+    sliderThumb.style.cursor = 'pointer';
+    sliderThumb.title = 'Arrastra tu foto aquí';
+    
+    async function onConfigChange(cfg) {
+      const primaryColor = cfg.primary_color || defaultConfig.primary_color;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const backgroundColor = cfg.background_color || defaultConfig.background_color;
+      const secondaryColor = cfg.secondary_color || defaultConfig.secondary_color;
+      const fontFamily = cfg.font_family || defaultConfig.font_family;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+      const photoUrl = cfg.photo_url || defaultConfig.photo_url;
+      
+      // Update text content
+      document.getElementById('main-title').textContent = cfg.main_title || defaultConfig.main_title;
+      document.getElementById('subtitle').textContent = cfg.subtitle || defaultConfig.subtitle;
+      document.getElementById('farewell-message').textContent = `"${cfg.farewell_message || defaultConfig.farewell_message}"`;
+      
+      // Update photo
+      const thumbPhoto = document.getElementById('thumb-photo');
+      const thumbPlaceholder = document.getElementById('thumb-placeholder');
+      
+      if (photoUrl) {
+        thumbPhoto.src = photoUrl;
+        thumbPhoto.style.display = 'block';
+        thumbPlaceholder.style.display = 'none';
+      } else {
+        thumbPhoto.style.display = 'none';
+        thumbPlaceholder.style.display = 'flex';
+      }
+      
+      // Update colors
+      document.getElementById('main-title').style.color = primaryColor;
+      document.getElementById('subtitle').style.color = textColor;
+      document.getElementById('farewell-message').style.color = textColor;
+      
+      // Update countdown cards
+      const cards = document.querySelectorAll('.countdown-card');
+      cards.forEach(card => {
+        card.style.background = `${primaryColor}1a`;
+        card.style.borderColor = `${primaryColor}4d`;
+      });
+      
+      const countdownNumbers = document.querySelectorAll('#days, #hours, #minutes, #seconds');
+      countdownNumbers.forEach(num => {
+        num.style.color = primaryColor;
+      });
+      
+      // Update slider thumb border
+      document.getElementById('slider-thumb').style.borderColor = primaryColor;
+      
+      // Update background
+      document.getElementById('app-wrapper').style.background = `linear-gradient(135deg, ${backgroundColor} 0%, ${secondaryColor} 50%, ${backgroundColor} 100%)`;
+      
+      // Update fonts
+      const baseFontStack = 'sans-serif';
+      document.body.style.fontFamily = `${fontFamily}, ${baseFontStack}`;
+      
+      // Update font sizes
+      document.getElementById('main-title').style.fontSize = `${fontSize * 3.5}px`;
+      document.getElementById('subtitle').style.fontSize = `${fontSize * 1.5}px`;
+      document.getElementById('farewell-message').style.fontSize = `${fontSize * 1.25}px`;
+    }
+    
+    function mapToCapabilities(cfg) {
+      return {
+        recolorables: [
+          {
+            get: () => cfg.background_color || defaultConfig.background_color,
+            set: (value) => { cfg.background_color = value; window.elementSdk.setConfig({ background_color: value }); }
+          },
+          {
+            get: () => cfg.secondary_color || defaultConfig.secondary_color,
+            set: (value) => { cfg.secondary_color = value; window.elementSdk.setConfig({ secondary_color: value }); }
+          },
+          {
+            get: () => cfg.text_color || defaultConfig.text_color,
+            set: (value) => { cfg.text_color = value; window.elementSdk.setConfig({ text_color: value }); }
+          },
+          {
+            get: () => cfg.primary_color || defaultConfig.primary_color,
+            set: (value) => { cfg.primary_color = value; window.elementSdk.setConfig({ primary_color: value }); }
+          }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => cfg.font_family || defaultConfig.font_family,
+          set: (value) => { cfg.font_family = value; window.elementSdk.setConfig({ font_family: value }); }
+        },
+        fontSizeable: {
+          get: () => cfg.font_size || defaultConfig.font_size,
+          set: (value) => { cfg.font_size = value; window.elementSdk.setConfig({ font_size: value }); }
+        }
+      };
+    }
+    
+    function mapToEditPanelValues(cfg) {
+      return new Map([
+        ["main_title", cfg.main_title || defaultConfig.main_title],
+        ["subtitle", cfg.subtitle || defaultConfig.subtitle],
+        ["farewell_message", cfg.farewell_message || defaultConfig.farewell_message],
+        ["photo_url", cfg.photo_url || defaultConfig.photo_url]
+      ]);
+    }
+    
+    // Initialize
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities,
+        mapToEditPanelValues
+      });
+      config = window.elementSdk.config;
+    }
+    
+    // Start countdown
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+    
+    // Load comments on page load
+    renderComments();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c9b4a9bc236cbbc',t:'MTc3MDM4NzY2MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
