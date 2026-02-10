@@ -55,8 +55,8 @@ const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY';
 3. Reemplaza con tus credenciales:
 
 ```javascript
-const SUPABASE_URL = 'https://xxxxx.supabase.co'; // Tu Project URL
-const SUPABASE_ANON_KEY = 'tu-clave-anon-aqui'; // Tu anon public key
+const SUPABASE_URL = 'https://nwyxvptuswgxoslgsyrn.supabase.co'; // Tu Project URL
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53eXh2cHR1c3dneG9zbGdzeXJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTY5NjIsImV4cCI6MjA4NjI5Mjk2Mn0.8334F1dfn6jPRIuiB0ZeP6Q3NcMrmXzFpADz1ekHAEM'; // Tu anon public key
 ```
 
 ## Paso 4: Probar
