@@ -629,7 +629,7 @@
     
     // Guardar comentario en Supabase
     async function saveComment(text, name) {
-      if (!supabase) {
+      if (!supabaseClient) {
         // Fallback a localStorage
         const newComment = {
           text: text,

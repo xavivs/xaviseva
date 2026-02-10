@@ -20,6 +20,10 @@ CREATE TABLE IF NOT EXISTS comments (
 -- Habilitar Row Level Security (RLS)
 ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
 
+-- Eliminar políticas existentes si existen (para evitar errores)
+DROP POLICY IF EXISTS "Anyone can read comments" ON comments;
+DROP POLICY IF EXISTS "Anyone can insert comments" ON comments;
+
 -- Política: Permitir lectura a todos (cualquiera puede ver comentarios)
 CREATE POLICY "Anyone can read comments"
   ON comments
@@ -55,8 +59,8 @@ const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY';
 3. Reemplaza con tus credenciales:
 
 ```javascript
-const SUPABASE_URL = 'https://nwyxvptuswgxoslgsyrn.supabase.co'; // Tu Project URL
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53eXh2cHR1c3dneG9zbGdzeXJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTY5NjIsImV4cCI6MjA4NjI5Mjk2Mn0.8334F1dfn6jPRIuiB0ZeP6Q3NcMrmXzFpADz1ekHAEM'; // Tu anon public key
+const SUPABASE_URL = 'TU_SUPABASE_URL'; // Tu Project URL
+const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY'; // Tu anon public key
 ```
 
 ## Paso 4: Probar
