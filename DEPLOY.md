@@ -2,7 +2,52 @@
 
 Guía para subir tu contador a un dominio propio.
 
-## Opción 1: Netlify (Recomendado - Más fácil y GRATIS) ⭐
+---
+
+## Subir con Git a Netlify (recomendado)
+
+El proyecto ya tiene Git inicializado y el primer commit hecho. Sigue estos pasos:
+
+### 1. Crear un repositorio en GitHub
+
+1. Ve a [github.com/new](https://github.com/new)
+2. Nombre del repositorio: por ejemplo `nombre` o `contador-despedida`
+3. **No** marques "Add a README" (ya tienes archivos locales)
+4. Clic en **Create repository**
+
+### 2. Conectar tu carpeta local y subir
+
+En la terminal, dentro de la carpeta `carpeta`, ejecuta (sustituye `TU_USUARIO` y `NOMBRE_REPO` por los tuyos):
+
+```bash
+cd 04-Xavi_se_va
+git remote add origin https://github.com/TU_USUARIO/NOMBRE_REPO.git
+git branch -M main
+git push -u origin main
+```
+
+Si te pide usuario/contraseña, en GitHub usa un **Personal Access Token** (Settings → Developer settings → Personal access tokens) en lugar de la contraseña.
+
+### 3. Conectar el repositorio a Netlify
+
+1. Entra en [app.netlify.com](https://app.netlify.com)
+2. **Add new site** → **Import an existing project**
+3. **Connect to Git provider** → elige **GitHub**
+4. Autoriza Netlify si te lo pide
+5. Elige el repositorio que acabas de crear
+6. Configuración del build:
+   - **Branch to deploy:** `main`
+   - **Build command:** (déjalo vacío)
+   - **Publish directory:** `.` (punto, la raíz del repo)
+7. **Deploy site**
+
+Listo: Netlify desplegará tu sitio y te dará una URL. Cada vez que hagas `git push` a `main`, Netlify volverá a desplegar automáticamente.
+
+---
+
+## Opción 1: Netlify sin Git (arrastrar carpeta)
+
+Si prefieres no usar Git:
 
 ### Pasos:
 

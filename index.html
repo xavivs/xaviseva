@@ -4,8 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contador de Días - Xavi se va</title>
-  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="icon" type="image/png" href="./assets/favicon.png">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     body {
@@ -186,7 +187,7 @@
           </div>
           <!-- Photo slider thumb (positioned absolutely on top) -->
           <div id="slider-thumb" class="absolute -top-7 w-16 h-16 rounded-full border-4 shadow-lg z-20 overflow-hidden transition-all duration-300 group-hover:scale-110" style="left: 0%; border-color: #fb923c; background: #1e293b; transform: translateX(-50%);">
-            <img id="thumb-photo" src="assets/foto-xavi.png" alt="Foto de Xavi" class="w-full h-full object-cover" style="display: block;">
+            <img id="thumb-photo" src="./assets/foto-xavi.png" alt="Foto de Xavi" class="w-full h-full object-cover" style="display: block;">
             <div id="thumb-placeholder" class="w-full h-full flex items-center justify-center text-3xl" style="background: rgba(251, 146, 60, 0.2); display: none;">
               📸
             </div>
@@ -246,12 +247,47 @@
     // Fecha de inicio (para calcular el progreso)
     const startDate = new Date(2026, 0, 12, 0, 0); // 12 de enero de 2026
     
+    // Configuración de horario laboral
+    const WORK_START_HOUR = 8; // 8:00 AM
+    const WORK_END_HOUR = 17; // 5:00 PM
+    const LUNCH_START_HOUR = 13; // 1:00 PM
+    const LUNCH_END_HOUR = 14; // 2:00 PM
+    const HOURS_PER_DAY = 8; // 8 horas laborales por día
+    
+    // Vacaciones: del 27 de febrero al 11 de marzo (incluidos)
+    const VACATION_START = new Date(2026, 1, 27, 0, 0); // 27 de febrero de 2026
+    const VACATION_END = new Date(2026, 2, 11, 23, 59, 59); // 11 de marzo de 2026
+    
     // Mensajes personalizables
     const config = {
       mainTitle: "¡Me voy! 👋",
       subtitle: "Cuenta atrás para el último día de Xavi",
       farewellMessage: "Gracias por todo!! 🖤"
     };
+    
+    // ============================================
+    // CONFIGURACIÓN DE SUPABASE
+    // ============================================
+    // IMPORTANTE: Reemplaza estos valores con tus credenciales de Supabase
+    const SUPABASE_URL = 'TU_SUPABASE_URL'; // Ejemplo: 'https://xxxxx.supabase.co'
+    const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY'; // Tu clave pública anónima
+    
+    // Inicializar Supabase (se inicializará después de que cargue la página)
+    let supabaseClient = null;
+    function initSupabase() {
+      if (SUPABASE_URL !== 'TU_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'TU_SUPABASE_ANON_KEY') {
+        try {
+          // El SDK de Supabase desde CDN puede estar en window.supabase o globalmente
+          const supabaseLib = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
+          if (supabaseLib && supabaseLib.createClient) {
+            supabaseClient = supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+          }
+        } catch (error) {
+          console.error('Error inicializando Supabase:', error);
+          supabaseClient = null;
+        }
+      }
+    }
     
     // ============================================
     // FUNCIONES DEL CONTADOR
@@ -277,11 +313,145 @@
       return `${date.getDate()} ${months[date.getMonth()]}`;
     }
     
+    // Función auxiliar: verificar si un día es laborable (lunes a viernes)
+    function isWorkday(date) {
+      const day = date.getDay();
+      return day !== 0 && day !== 6; // No domingo (0) ni sábado (6)
+    }
+    
+    // Función auxiliar: verificar si un día está en vacaciones
+    function isVacation(date) {
+      return date >= VACATION_START && date <= VACATION_END;
+    }
+    
+    // Función auxiliar: verificar si una fecha/hora está en horario laboral
+    function isWorkHours(date) {
+      const hour = date.getHours();
+      const minute = date.getMinutes();
+      const timeInMinutes = hour * 60 + minute;
+      const workStartMinutes = WORK_START_HOUR * 60;
+      const lunchStartMinutes = LUNCH_START_HOUR * 60;
+      const lunchEndMinutes = LUNCH_END_HOUR * 60;
+      const workEndMinutes = WORK_END_HOUR * 60;
+      
+      return (timeInMinutes >= workStartMinutes && timeInMinutes < lunchStartMinutes) ||
+             (timeInMinutes >= lunchEndMinutes && timeInMinutes < workEndMinutes);
+    }
+    
+    // Función auxiliar: obtener horas laborales restantes del día actual
+    function getRemainingWorkHoursToday(now) {
+      if (!isWorkday(now) || isVacation(now)) {
+        return 0;
+      }
+      
+      const hour = now.getHours();
+      const minute = now.getMinutes();
+      const timeInMinutes = hour * 60 + minute;
+      const workStartMinutes = WORK_START_HOUR * 60;
+      const lunchStartMinutes = LUNCH_START_HOUR * 60;
+      const lunchEndMinutes = LUNCH_END_HOUR * 60;
+      const workEndMinutes = WORK_END_HOUR * 60;
+      
+      // Si estamos antes del horario laboral, contamos todo el día
+      if (timeInMinutes < workStartMinutes) {
+        return HOURS_PER_DAY;
+      }
+      
+      // Si estamos en la pausa de comida, contamos las horas de la tarde
+      if (timeInMinutes >= lunchStartMinutes && timeInMinutes < lunchEndMinutes) {
+        return (workEndMinutes - lunchEndMinutes) / 60;
+      }
+      
+      // Si estamos después del horario laboral, no quedan horas hoy
+      if (timeInMinutes >= workEndMinutes) {
+        return 0;
+      }
+      
+      // Si estamos en horario de mañana, contamos lo que queda de mañana + tarde
+      if (timeInMinutes >= workStartMinutes && timeInMinutes < lunchStartMinutes) {
+        const remainingMorning = (lunchStartMinutes - timeInMinutes) / 60;
+        const afternoonHours = (workEndMinutes - lunchEndMinutes) / 60;
+        return remainingMorning + afternoonHours;
+      }
+      
+      // Si estamos en horario de tarde, contamos lo que queda
+      if (timeInMinutes >= lunchEndMinutes && timeInMinutes < workEndMinutes) {
+        return (workEndMinutes - timeInMinutes) / 60;
+      }
+      
+      return 0;
+    }
+    
+    // Función auxiliar: obtener segundos laborales restantes del día actual
+    function getRemainingWorkSecondsToday(now) {
+      if (!isWorkday(now) || isVacation(now)) {
+        return 0;
+      }
+      
+      const hour = now.getHours();
+      const minute = now.getMinutes();
+      const second = now.getSeconds();
+      const timeInSeconds = hour * 3600 + minute * 60 + second;
+      
+      const workStartSeconds = WORK_START_HOUR * 3600;
+      const lunchStartSeconds = LUNCH_START_HOUR * 3600;
+      const lunchEndSeconds = LUNCH_END_HOUR * 3600;
+      const workEndSeconds = WORK_END_HOUR * 3600;
+      
+      // Si estamos antes del horario laboral, contamos todo el día
+      if (timeInSeconds < workStartSeconds) {
+        return (lunchStartSeconds - workStartSeconds) + (workEndSeconds - lunchEndSeconds);
+      }
+      
+      // Si estamos en la pausa de comida, contamos las horas de la tarde
+      if (timeInSeconds >= lunchStartSeconds && timeInSeconds < lunchEndSeconds) {
+        return workEndSeconds - lunchEndSeconds;
+      }
+      
+      // Si estamos después del horario laboral, no quedan segundos hoy
+      if (timeInSeconds >= workEndSeconds) {
+        return 0;
+      }
+      
+      // Si estamos en horario de mañana, contamos lo que queda de mañana + tarde
+      if (timeInSeconds >= workStartSeconds && timeInSeconds < lunchStartSeconds) {
+        const remainingMorning = lunchStartSeconds - timeInSeconds;
+        const afternoonSeconds = workEndSeconds - lunchEndSeconds;
+        return remainingMorning + afternoonSeconds;
+      }
+      
+      // Si estamos en horario de tarde, contamos lo que queda
+      if (timeInSeconds >= lunchEndSeconds && timeInSeconds < workEndSeconds) {
+        return workEndSeconds - timeInSeconds;
+      }
+      
+      return 0;
+    }
+    
+    // Función auxiliar: contar días laborables completos entre dos fechas (sin contar el día actual)
+    function countWorkdaysBetween(start, end) {
+      let count = 0;
+      const current = new Date(start);
+      current.setDate(current.getDate() + 1); // Empezar desde el día siguiente
+      current.setHours(0, 0, 0, 0);
+      
+      const endDate = new Date(end);
+      endDate.setHours(0, 0, 0, 0);
+      
+      while (current < endDate) {
+        if (isWorkday(current) && !isVacation(current)) {
+          count++;
+        }
+        current.setDate(current.getDate() + 1);
+      }
+      
+      return count;
+    }
+    
     function updateCountdown() {
       const now = new Date();
-      const diff = targetDate - now;
       
-      if (diff <= 0) {
+      if (now >= targetDate) {
         document.getElementById('days').textContent = '0';
         document.getElementById('hours').textContent = '0';
         document.getElementById('minutes').textContent = '0';
@@ -295,23 +465,41 @@
         return;
       }
       
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      // Calcular segundos laborales restantes del día actual
+      let remainingSecondsToday = getRemainingWorkSecondsToday(now);
+      
+      // Contar días laborables completos entre mañana y la fecha objetivo
+      const workdaysRemaining = countWorkdaysBetween(now, targetDate);
+      
+      // Calcular horas totales laborales restantes
+      const totalWorkSeconds = (workdaysRemaining * HOURS_PER_DAY * 3600) + remainingSecondsToday;
+      
+      // Convertir a días, horas, minutos y segundos
+      const totalWorkHours = totalWorkSeconds / 3600;
+      const days = Math.floor(totalWorkHours / HOURS_PER_DAY);
+      const hours = Math.floor(totalWorkHours % HOURS_PER_DAY);
+      const minutes = Math.floor((totalWorkSeconds % 3600) / 60);
+      const seconds = Math.floor(totalWorkSeconds % 60);
       
       document.getElementById('days').textContent = days;
       document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
       document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
       document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
       
-      // Calculate progress
-      const totalDuration = targetDate - startDate;
-      const elapsed = now - startDate;
-      const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+      // Calculate progress (basado en horas laborales)
+      // Total de horas laborales desde startDate hasta targetDate
+      const startDateWithTime = new Date(startDate);
+      startDateWithTime.setHours(WORK_START_HOUR, 0, 0, 0);
+      const totalWorkdaysFromStart = countWorkdaysBetween(startDateWithTime, targetDate) + 
+                                    (isWorkday(startDateWithTime) && !isVacation(startDateWithTime) ? 1 : 0);
+      const totalWorkSecondsFromStart = totalWorkdaysFromStart * HOURS_PER_DAY * 3600;
+      
+      // Horas transcurridas = totales - restantes
+      const elapsedWorkSeconds = totalWorkSecondsFromStart - totalWorkSeconds;
+      const progress = totalWorkSecondsFromStart > 0 ? Math.min(100, Math.max(0, (elapsedWorkSeconds / totalWorkSecondsFromStart) * 100)) : 0;
       
       document.getElementById('progress-bar').style.width = progress.toFixed(1) + '%';
-      const sliderPos = Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
+      const sliderPos = Math.max(0, Math.min(100, progress));
       document.getElementById('slider-thumb').style.left = sliderPos + '%';
       document.getElementById('progress-percent').textContent = progress.toFixed(1) + '%';
     }
@@ -342,10 +530,9 @@
     }
     
     function createFloatingComment() {
-      const storedComments = JSON.parse(localStorage.getItem('despedida_comments')) || [];
-      if (storedComments.length === 0) return;
+      if (comments.length === 0) return;
       
-      const randomComment = storedComments[Math.floor(Math.random() * storedComments.length)];
+      const randomComment = comments[Math.floor(Math.random() * comments.length)];
       const commentText = randomComment.text.length > 40 
         ? randomComment.text.substring(0, 40) + '...' 
         : randomComment.text;
@@ -399,17 +586,100 @@
     
     // Mostrar comentarios como mensajes flotantes (más frecuentes que los mensajes normales)
     setInterval(() => {
-      const storedComments = JSON.parse(localStorage.getItem('despedida_comments')) || [];
-      if (storedComments.length > 0 && Math.random() > 0.5) {
+      if (comments.length > 0 && Math.random() > 0.5) {
         createFloatingComment();
       }
     }, 2500);
     
     // ============================================
-    // SISTEMA DE COMENTARIOS
+    // SISTEMA DE COMENTARIOS CON SUPABASE
     // ============================================
     
-    let comments = JSON.parse(localStorage.getItem('despedida_comments')) || [];
+    let comments = [];
+    
+    // Cargar comentarios desde Supabase
+    async function loadComments() {
+      if (!supabaseClient) {
+        // Fallback a localStorage si Supabase no está configurado
+        comments = JSON.parse(localStorage.getItem('despedida_comments')) || [];
+        renderComments();
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabaseClient
+          .from('comments')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('Error cargando comentarios:', error);
+          // Fallback a localStorage
+          comments = JSON.parse(localStorage.getItem('despedida_comments')) || [];
+        } else {
+          comments = data || [];
+        }
+        renderComments();
+      } catch (error) {
+        console.error('Error:', error);
+        comments = JSON.parse(localStorage.getItem('despedida_comments')) || [];
+        renderComments();
+      }
+    }
+    
+    // Guardar comentario en Supabase
+    async function saveComment(text, name) {
+      if (!supabase) {
+        // Fallback a localStorage
+        const newComment = {
+          text: text,
+          name: name,
+          date: new Date().toISOString()
+        };
+        comments.push(newComment);
+        localStorage.setItem('despedida_comments', JSON.stringify(comments));
+        renderComments();
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabaseClient
+          .from('comments')
+          .insert([
+            {
+              text: text,
+              name: name
+            }
+          ])
+          .select();
+        
+        if (error) {
+          console.error('Error guardando comentario:', error);
+          // Fallback a localStorage
+          const newComment = {
+            text: text,
+            name: name,
+            date: new Date().toISOString()
+          };
+          comments.push(newComment);
+          localStorage.setItem('despedida_comments', JSON.stringify(comments));
+        } else {
+          // Recargar comentarios desde Supabase
+          await loadComments();
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        // Fallback a localStorage
+        const newComment = {
+          text: text,
+          name: name,
+          date: new Date().toISOString()
+        };
+        comments.push(newComment);
+        localStorage.setItem('despedida_comments', JSON.stringify(comments));
+        renderComments();
+      }
+    }
     
     function renderComments() {
       const commentsList = document.getElementById('comments-list');
@@ -419,12 +689,15 @@
         return;
       }
       
-      commentsList.innerHTML = comments.map((comment, index) => `
+      commentsList.innerHTML = comments.map((comment, index) => {
+        const date = comment.created_at || comment.date;
+        return `
         <div class="p-3 rounded-lg" style="background: rgba(251, 146, 60, 0.1); border-left: 3px solid #fb923c;">
           <p style="color: #f1f5f9; margin: 0; word-break: break-word;">${escapeHtml(comment.text)}</p>
-          <p style="color: #64748b; font-size: 0.85rem; margin: 4px 0 0 0;">${escapeHtml(comment.name || 'Anónimo')} • ${new Date(comment.date).toLocaleDateString('es-ES')}</p>
+          <p style="color: #64748b; font-size: 0.85rem; margin: 4px 0 0 0;">${escapeHtml(comment.name || 'Anónimo')} • ${new Date(date).toLocaleDateString('es-ES')}</p>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
     
     function escapeHtml(text) {
@@ -454,22 +727,29 @@
       return funnyNames[Math.floor(Math.random() * funnyNames.length)];
     }
     
-    document.getElementById('comment-btn').addEventListener('click', () => {
+    document.getElementById('comment-btn').addEventListener('click', async () => {
       const input = document.getElementById('comment-input');
       const text = input.value.trim();
       
       if (text.length > 0) {
-        comments.push({
-          text: text,
-          name: getRandomFunnyName(),
-          date: new Date().toISOString()
-        });
-        localStorage.setItem('despedida_comments', JSON.stringify(comments));
+        const name = getRandomFunnyName();
         input.value = '';
-        renderComments();
+        
+        // Deshabilitar botón mientras se guarda
+        const btn = document.getElementById('comment-btn');
+        btn.disabled = true;
+        btn.textContent = 'Enviando...';
+        
+        await saveComment(text, name);
+        
+        // Rehabilitar botón
+        btn.disabled = false;
+        btn.textContent = 'Enviar mensaje';
         
         // Scroll to bottom
-        document.getElementById('comments-list').scrollTop = document.getElementById('comments-list').scrollHeight;
+        setTimeout(() => {
+          document.getElementById('comments-list').scrollTop = document.getElementById('comments-list').scrollHeight;
+        }, 100);
       }
     });
     
@@ -491,12 +771,26 @@
     document.getElementById('start-date-label').textContent = formatShortDate(startDate);
     document.getElementById('end-date-label').textContent = formatShortDate(targetDate) + ' 🪦';
     
+    // Inicializar Supabase cuando la página cargue
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initSupabase);
+    } else {
+      initSupabase();
+    }
+    
     // Iniciar contador
     updateCountdown();
     setInterval(updateCountdown, 1000);
     
-    // Cargar comentarios
-    renderComments();
+    // Cargar comentarios desde Supabase (esperar un poco para que Supabase se inicialice)
+    setTimeout(() => {
+      loadComments();
+      
+      // Recargar comentarios cada 5 segundos para ver nuevos mensajes
+      setInterval(() => {
+        loadComments();
+      }, 5000);
+    }, 500);
   </script>
 </body>
 </html>
