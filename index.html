@@ -269,13 +269,13 @@
     // CONFIGURACIÓN DE SUPABASE
     // ============================================
     // IMPORTANTE: Reemplaza estos valores con tus credenciales de Supabase
-    const SUPABASE_URL = 'TU_SUPABASE_URL'; // Ejemplo: 'https://xxxxx.supabase.co'
-    const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY'; // Tu clave pública anónima
+    const SUPABASE_URL = 'https://nwyxvptuswgxoslgsyrn.supabase.co'; // Ejemplo: 'https://xxxxx.supabase.co'
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53eXh2cHR1c3dneG9zbGdzeXJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTY5NjIsImV4cCI6MjA4NjI5Mjk2Mn0.8334F1dfn6jPRIuiB0ZeP6Q3NcMrmXzFpADz1ekHAEM'; // Tu clave pública anónima
     
     // Inicializar Supabase (se inicializará después de que cargue la página)
     let supabaseClient = null;
     function initSupabase() {
-      if (SUPABASE_URL !== 'TU_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'TU_SUPABASE_ANON_KEY') {
+      if (SUPABASE_URL !== 'https://nwyxvptuswgxoslgsyrn.supabase.co' && SUPABASE_ANON_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53eXh2cHR1c3dneG9zbGdzeXJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTY5NjIsImV4cCI6MjA4NjI5Mjk2Mn0.8334F1dfn6jPRIuiB0ZeP6Q3NcMrmXzFpADz1ekHAEM') {
         try {
           // El SDK de Supabase desde CDN puede estar en window.supabase o globalmente
           const supabaseLib = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
