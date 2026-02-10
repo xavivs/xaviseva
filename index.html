@@ -275,17 +275,23 @@
     // Inicializar Supabase (se inicializará después de que cargue la página)
     let supabaseClient = null;
     function initSupabase() {
-      if (SUPABASE_URL !== 'https://nwyxvptuswgxoslgsyrn.supabase.co' && SUPABASE_ANON_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53eXh2cHR1c3dneG9zbGdzeXJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTY5NjIsImV4cCI6MjA4NjI5Mjk2Mn0.8334F1dfn6jPRIuiB0ZeP6Q3NcMrmXzFpADz1ekHAEM') {
+      // Verificar que las credenciales estén configuradas (no sean placeholders)
+      if (SUPABASE_URL && SUPABASE_URL !== 'TU_SUPABASE_URL' && 
+          SUPABASE_ANON_KEY && SUPABASE_ANON_KEY !== 'TU_SUPABASE_ANON_KEY') {
         try {
-          // El SDK de Supabase desde CDN puede estar en window.supabase o globalmente
-          const supabaseLib = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
-          if (supabaseLib && supabaseLib.createClient) {
-            supabaseClient = supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+          // El SDK de Supabase desde CDN expone 'supabase' globalmente
+          if (typeof supabase !== 'undefined' && supabase.createClient) {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('Supabase inicializado correctamente');
+          } else {
+            console.error('SDK de Supabase no encontrado. Verifica que el script esté cargado.');
           }
         } catch (error) {
           console.error('Error inicializando Supabase:', error);
           supabaseClient = null;
         }
+      } else {
+        console.warn('Credenciales de Supabase no configuradas. Usando localStorage.');
       }
     }
     
@@ -790,7 +796,7 @@
       setInterval(() => {
         loadComments();
       }, 5000);
-    }, 500);
+    }, 1000);
   </script>
 </body>
 </html>
